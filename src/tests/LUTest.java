@@ -23,7 +23,6 @@ public class LUTest {
 		long start = System.currentTimeMillis();
 		lu.decompose(0);
 		long end = System.currentTimeMillis();
-		lu.verifyLUDecomposition(mcopy);
 		System.out.println(lu.verifyLUDecomposition(mcopy) + " Decomposition time taken " + (end - start));
 	}
 }

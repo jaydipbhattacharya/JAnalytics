@@ -37,7 +37,7 @@ public class Utility {
 		LUDecomp lu = new LUDecomp(source, useThreads, debugThreads);
 		lu.decompose(0);
 		// System.out.println( "LU De.~QmQ done ");
-		System.out.println( "Verfied LU = " + lu.verifyLUDecomposition(mcopy) );
+		//System.out.println( "Verfied LU = " + lu.verifyLUDecomposition(mcopy) );
 		int noThreads = 0;
 		if (useThreads)
 			noThreads = inverted.getNCols();
