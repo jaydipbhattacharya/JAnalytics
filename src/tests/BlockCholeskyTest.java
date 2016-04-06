@@ -26,7 +26,7 @@ class BlockCholeskyTest {
 		/* if you this sz parameter is same matrix size , BlockCholesky will NOT partition, it will simply call cholesky 
 		 * to see blockcholesky in action pass this param as sz/2,sz/4 etc. sz does not have to be an even number
 		 */
-		BlockCholesky mc = new BlockCholesky( sz );
+		BlockCholesky mc = new BlockCholesky( sz/4 );
 		long start = System.currentTimeMillis();
 		
 		try {

@@ -23,20 +23,26 @@ public class BlockCholesky {
 	public void blockCholesky(JMatrixAbstract c, JMatrixAbstract r, boolean useThreads, boolean debugThreads)
 			throws Exception {
 		level.push(1);
-		for (int i = 0; i < level.size(); i++)
-			System.out.print("\t");
 		if (c.getNRows() <= cholesky_sz) {
+			for (int i = 0; i < level.size(); i++) System.out.print("\t");
 			System.out.println("No more partititioning, invoking cholesky at level  " + level.size() + " , No Rows=" + c.getNRows() );
 			cholesky(c, r, useThreads, debugThreads);
 		} else {
-			System.out.println("Partitioning at " + level.size() + " , No Rows=" + c.getNRows() );
+			for(int i=0; i< level.size(); i++) System.out.print("\t");
+			System.out.print("Partitioning Matrix=(" + c.getNRows() + ") into ");
 			JMatrixAbstract a11 = Utility.getSubset(c, 0, 0, c.getNRows() / 2, c.getNRows() / 2, MatrixType.LOWER); // top
 																													// left
-																													// square
+			System.out.print("A11(" + a11.getNCols() + ")  ");                                 // square
 			JMatrixAbstract a12 = Utility.getSubset(c, 0, c.getNRows() / 2 + 1, c.getNRows() / 2, c.getNRows() - 1,
 					MatrixType.RECTANGULAR); // top right rectangular
+			
+			System.out.print("A12(" +a12.getNRows() +"," +  a12.getNCols() + ")  ");
+			
 			JMatrixAbstract a22 = Utility.getSubset(c, c.getNRows() / 2 + 1, c.getNRows() / 2 + 1, c.getNRows() - 1,
 					c.getNRows() - 1, MatrixType.SQUARE); // bottom right square
+			
+			System.out.println("A22 (" +a22.getNCols() + ")  ");
+			
 			JMatrixAbstract r11 = Utility.getSubset(r, 0, 0, r.getNRows() / 2, r.getNRows() / 2, MatrixType.LOWER); // top
 																													// left
 																													// half
@@ -44,39 +50,45 @@ public class BlockCholesky {
 			JMatrixAbstract r21 = Utility.getSubset(r, r.getNRows() / 2 + 1, 0, r.getNRows() - 1, r.getNRows() / 2,
 					MatrixType.RECTANGULAR); // bottom left rectangle
 			JMatrixAbstract r22 = Utility.getSubset(r, r.getNRows() / 2 + 1, r.getNRows() / 2 + 1, r.getNRows() - 1,
-					r.getNRows() - 1, MatrixType.SQUARE); // bottom right half
-															// matrix
-			// BLOCKCHOLESKY(A11, R11)
+					r.getNRows() - 1, MatrixType.SQUARE); // bottom right half  matrix
+			for(int i=0; i< level.size(); i++) System.out.print("\t");
+			System.out.println("BLOCKCHOLESKY(A11, R11) ");
 			blockCholesky(a11, r11, useThreads, debugThreads);
 			for(int i=0; i< level.size(); i++) System.out.print("\t");
-			System.out.println("Inverting " + r11.getNRows() +"," + r11.getNCols() + "\n");
+			System.out.println("R21 = T(inverse(R11) * A12 ) r11=( " + r11.getNRows() + ")");
 			// R21 = T(inverse(R11) * A12 )
 			JMatrixAbstract invr11 = Utility.invertLowerMatrix(r11, useThreads, debugThreads);
+			for(int i=0; i< level.size(); i++) System.out.print("\t\t");
+			System.out.println("INVERT DONE");
+			
+			
 			//System.out.println(" verify invert " + Utility.verifylnvert(r11, invr11));
-			for(int i=0; i< level.size(); i++) System.out.print("\t");
-			System.out.println("Multiplying " + invr11.getNRows() +"," + invr11.getNCols() + "X" + a12.getNRows() + "," + a12.getNCols() + "\n");
 			JMatrixAbstract invr11_a12 = new RectangularMatrix(invr11.getNRows(), a12.getNCols());
 			Utility.multiply(invr11_a12, invr11, a12, useThreads, debugThreads);
+			for(int i=0; i< level.size(); i++) System.out.print("\t\t");
+			System.out.println("MULTIPLY DONE");
 			JMatrixAbstract invr11_a12_Transpose = Utility.getTransposedView(invr11_a12);
-			for(int i=0; i< level.size(); i++) System.out.print("\t");
-			System.out.println("Copying " + invr11_a12_Transpose.getNRows() +"," + invr11_a12_Transpose.getNCols() +"\n");
 			Utility.copyOperation(r21, invr11_a12_Transpose);
+			for(int i=0; i< level.size(); i++) System.out.print("\t\t");
+			System.out.println("COPY DONE");
 			invr11_a12_Transpose = null;
 			invr11_a12 = null;
 			invr11 = null;
 			// BLOCKCHOLESKY(A22 - R21 * T( R21 ) , R22 )
 			for(int i=0; i < level.size(); i++) System.out.print("\t");
-			System.out.println("Multiplying R21" + r21.getNRows() +"," + r21.getNCols() + "With XPose\n");
+			System.out.println("BLOCKCHOLESKY(A22 - R21 * T( R21 ) , R22 )");
 			JMatrixAbstract r21MultR21Transpose = new RectangularMatrix(r21.getNRows(), r21.getNRows());
 			Utility.multiply(r21MultR21Transpose, r21, Utility.getTransposedView(r21), useThreads, debugThreads);
-			for(int i=0; i< level.size(); i++) System.out.print("\t");
-			System.out.println("Subtracting from a22" + r21MultR21Transpose.getNRows() +"," + r21MultR21Transpose.getNCols() +"\n");
+			for(int i=0; i< level.size(); i++) System.out.print("\t\t");
+			System.out.println("MULTIPLY DONE");
 			JMatrixAbstract temp = new RectangularMatrix(a22.getNRows(), a22.getNRows());
 			Utility.minusOperation(temp, a22, r21MultR21Transpose);
+			for(int i=0; i< level.size(); i++) System.out.print("\t\t");
+			System.out.println("MINUS DONE");
 			blockCholesky(temp, r22, useThreads, debugThreads);
 		}
 		for(int i=0; i< level.size(); i++) System.out.print("\t");
-		System.out.println("End " + level.size());
+		System.out.println("End ");
 		level.pop();
 	}
 
