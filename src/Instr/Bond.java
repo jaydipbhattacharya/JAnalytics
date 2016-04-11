@@ -70,63 +70,25 @@ public class Bond {
 	public static double ytm( double pv, double seed_rate, double coupon, CouponFreq cpnfreq, Date maturity, double faceValue, Date today) {
 		double rate = seed_rate;
 		int count = 0;
+		double[] terms = new double[1];
+		double[] rates = new double[1];
+		terms[0]=0;
+		rates[0] = seed_rate;
 		while( count < 1000) {
 			count++;
-			double pv1 = pv_with_constant_rate( rate,  coupon, cpnfreq, maturity, faceValue, today);
+			double[]  result = price(terms, rates, coupon, cpnfreq, maturity, faceValue, today);
 			//System.out.println("PV1=" + pv1 + " Pv=" + pv + " rate = "+ rate);
-			double diff = Math.abs( pv1 - pv);
+			double diff = Math.abs( result[0] - pv);
 			if ( diff < 0.01) {
-				return rate;
+				return rates[0];
 			}
 			
-			rate += 0.1*(pv1 - pv)/pv1;
+			rates[0] += 0.1*( result[0] - pv)/ result[0];
 			
 		}
 		return 0;
 	}
 	
-	public static double pv_with_constant_rate( double rate, double coupon, CouponFreq cpnfreq, Date maturity,
-			double faceValue, Date today) {
-
-		double pv = 0;
-		int cpndays = 0;
-		switch (cpnfreq) {
-		case ANNUAL:
-			cpndays = 365;
-			break;
-		case SEMI_ANNUAL:
-			cpndays = 180;
-			break;
-		case QTRLY:
-			cpndays = 90;
-			break;
-		case MONTHLY:
-			cpndays = 30;
-			break;
-		default:
-			return -1.0;
-
-		}
-
-		
-		boolean atmaturity=true;
-		for (Date todate = maturity;; todate = addDays(todate, -cpndays)) {
-			Date fromdate= addDays( todate, -cpndays);
-			double from_yrs = diffYear(fromdate, today);
-			if (from_yrs > 0) {
-				pv = (coupon*faceValue*cpndays/365.25 + ( atmaturity ? faceValue : 0  ) + pv ) / ( 1 + rate*cpndays/365.25 );
-			} else { 
-				// accrued calc fromdate to today
-				//pv += coupon * faceValue* (-yrs) / (cpndays / 365.25);
-				// today to todate
-				cpndays = diffDays(todate,today);
-				pv = (coupon*faceValue*cpndays/365.25 + ( atmaturity ? faceValue : 0  ) + pv ) / ( 1 + rate*cpndays/365.25 );
-				break;
-			}
-			atmaturity = false;
-		}
-		return pv;
-	}
 	
 
 	public static Date addDays(Date date, int days) {
@@ -199,6 +161,7 @@ public class Bond {
 			System.out.println(res[0] + " " + res[1] );
 			y =  ytm( res[0], res[1],  coupon,  cpnfreq,  maturity2,  faceValue, today) ;
 			System.out.println("YTM=" + y );
+			
 			
 		/*} catch (ParseException e) {
 			// TODO Auto-generated catch block
